@@ -14,7 +14,7 @@ class Server : public QObject
     using ConstMapIterator = QMap<QString, QList<double>>::const_iterator;
 
 public:
-    explicit Server(int, const QString &, QObject *parent = nullptr);
+    explicit Server(int, int, const QString &, QObject *parent = nullptr);
     ~Server();
 
 public slots:

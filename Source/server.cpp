@@ -7,10 +7,12 @@
 
 const quint16 Server::sMaxNumLinesPerFile = 512;
 
-Server::Server(int port, const QString &resltsFile, QObject *parent)
+Server::Server(int port, int maxConnections, const QString &resltsFile, QObject *parent)
     : QObject(parent),
       mResltsFile(resltsFile)
 {
+    Q_UNUSED(maxConnections);
+
     mTcpServerPtr = new QTcpServer(this);
 
     connect(mTcpServerPtr, SIGNAL(newConnection()), this, SLOT(onNewConnection()));

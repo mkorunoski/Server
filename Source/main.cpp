@@ -11,10 +11,11 @@ int main(int argc, char *argv[])
     QSettings settings(QDir::currentPath().append("/config.ini"), QSettings::IniFormat);
     settings.beginGroup("Configuration parameters");
         int port            = settings.value("port").toInt();
-        QString resultsFile = settings.value("resultsFile").toString();
+        int maxConnections  = settings.value("maxConnections") .toInt();
+        QString resultsFile = settings.value("resultsFile").toString();        
     settings.endGroup();
 
-    Server server(port, resultsFile);
+    Server server(port, maxConnections, resultsFile);
 
     return a.exec();
 }
