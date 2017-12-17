@@ -1,4 +1,4 @@
-QT += network
+QT += charts network
 QT -= gui
 
 CONFIG += c++11 console
@@ -17,8 +17,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp \
     server.cpp \
-    files.cpp
+    files.cpp \
+    test.cpp
 
 HEADERS += \
     server.h \
-    files.h
+    files.h \
+    test.h

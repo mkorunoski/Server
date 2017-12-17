@@ -1,4 +1,4 @@
-#include <QCoreApplication>
+#include <QApplication>
 #include <QSettings>
 #include <QDir>
 
@@ -6,7 +6,7 @@
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
+    QApplication a(argc, argv);
 
     QSettings settings(QDir::currentPath().append("/config.ini"), QSettings::IniFormat);
     settings.beginGroup("Configuration parameters");

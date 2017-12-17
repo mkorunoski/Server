@@ -20,16 +20,18 @@ public:
 public slots:
     void onNewConnection();
     void onReadyRead();
+    void onDisconnected();
 
 private:
     QString getKey(const QTcpSocket *);
     bool canCalculate();
-    double sumFirst();
+    void calculate();
 
     static const quint16 sMaxNumLinesPerFile;
 
     QString mResltsFile;
 
+    int mMaxConnections;
     QTcpServer *mTcpServerPtr;
     QMap<QString, QList<double>> mSums;
     QVector<QTcpSocket *> mConnections;

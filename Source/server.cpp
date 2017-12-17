@@ -1,18 +1,22 @@
 #include "server.h"
 
+#include <ctime>
+
+#include <QApplication>
 #include <QDebug>
 #include <QByteArray>
+#include <QStringRef>
 
 #include "files.h"
+#include "test.h"
 
 const quint16 Server::sMaxNumLinesPerFile = 512;
 
 Server::Server(int port, int maxConnections, const QString &resltsFile, QObject *parent)
     : QObject(parent),
-      mResltsFile(resltsFile)
+      mResltsFile(resltsFile),
+      mMaxConnections(maxConnections)
 {
-    Q_UNUSED(maxConnections);
-
     mTcpServerPtr = new QTcpServer(this);
 
     connect(mTcpServerPtr, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
@@ -43,6 +47,7 @@ void Server::onNewConnection()
     }
 
     connect(mConnections.last(), SIGNAL(readyRead()), this, SLOT(onReadyRead()));
+    connect(mConnections.last(), SIGNAL(disconnected()), this, SLOT(onDisconnected()));
 }
 
 void Server::onReadyRead()
@@ -54,8 +59,27 @@ void Server::onReadyRead()
 
     if (canCalculate())
     {
-        auto sum = sumFirst() / (mSums.size() * sMaxNumLinesPerFile);
-        Files::write(sum, mResltsFile.toStdString());
+        calculate();
+    }
+}
+
+void Server::onDisconnected()
+{
+    QTcpSocket *socketPtr = qobject_cast<QTcpSocket *>(sender());
+    auto ok = mConnections.removeOne(socketPtr);
+
+    if (!ok)
+        return;
+
+    qDebug() << "Client successfully disconnected.";
+
+    if (0 == mConnections.size())
+    {
+        while (canCalculate())
+            calculate();
+
+        Test::instance()->saveResults(QStringRef(&mResltsFile, 0, mResltsFile.lastIndexOf("/")).toString());
+        QApplication::exit();
     }
 }
 
@@ -68,7 +92,10 @@ QString Server::getKey(const QTcpSocket *socket)
 
 bool Server::canCalculate()
 {
-    for (ConstMapIterator it = mSums.constBegin(); it != mSums.constEnd(); ++it)
+    if (mSums.size() != mMaxConnections)
+        return false;
+
+    for (auto it = mSums.constBegin(); it != mSums.constEnd(); ++it)
     {
         if (0 == it->size())
             return false;
@@ -77,13 +104,21 @@ bool Server::canCalculate()
     return true;
 }
 
-double Server::sumFirst()
+void Server::calculate()
 {
+    auto start = std::clock();
     double sum = 0.0;
     for (MapIterator it = mSums.begin(); it != mSums.end(); ++it)
     {
         sum += it->first();
         it->removeFirst();
     }
-    return sum;
+    auto stop = std::clock();
+
+    auto execTime = (stop - start) / (double) CLOCKS_PER_SEC * 1000;
+    Test::instance()->newExecTime(execTime);
+
+    sum /= (mSums.size() * sMaxNumLinesPerFile);
+
+    Files::write(sum, mResltsFile.toStdString());
 }
